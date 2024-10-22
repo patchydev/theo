@@ -289,7 +289,7 @@ pub fn parse_and_make_move(board: &mut Board, move_str: &str, color: bool) -> bo
                         }
                     }
             
-                    if (color && from.0 == 1) || (!color && from.0 == 6) {
+                    if (!color && from.0 == 1) || (color && from.0 == 6) {
                         if to.0 as isize == from.0 as isize + (2 * direction) {
                             let intermediate_row = (from.0 as isize + direction) as usize;
                             if board.squares[to.0][to.1].piece.is_none() && 
