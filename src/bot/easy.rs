@@ -3,10 +3,10 @@ use rand::seq::SliceRandom;
 
 use crate::Board;
 
-pub fn choose_bot_move(board: &Board) -> String {
-    let valid_moves = board.generate_valid_moves(false); // Assuming the bot plays as black
+pub fn choose_bot_move(board: &mut Board) -> String {
+    let valid_moves = board.generate_valid_moves(false);
     if valid_moves.is_empty() {
-        return String::from("No valid moves available."); // Handle no available moves (checkmate)
+        return String::from("No valid moves available.");
     }
 
     let mut rng = thread_rng();

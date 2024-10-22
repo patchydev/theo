@@ -9,12 +9,12 @@ fn main() {
     let mut board = Board::new();
 
     loop {
-        display_board(&board);
+        display_board(&mut board);
 
         let user_move = get_user_input();
         if parse_and_make_move(&mut board, &user_move, true) {
             display_board(&board);
-            let bot_move = choose_bot_move(&board);
+            let bot_move = choose_bot_move(&mut board);
             parse_and_make_move(&mut board, &bot_move, false);
         } else {
             println!("Invalid move! Please try again.");

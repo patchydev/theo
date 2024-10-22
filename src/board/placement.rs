@@ -1,13 +1,13 @@
 use crate::Board;
-use crate::board::board::{Piece, Square, parse_position, Pawn};
+use crate::board::board::{Piece, Square, parse_position};
 
 impl Board {
     pub fn new() -> Self {
         let mut squares = [[Square { piece: None }; 8]; 8];
 
         for i in 0..8 {
-            squares[1][i].piece = Some((Piece::P(Pawn { on_start: true, can_ep: false }), false));
-            squares[6][i].piece = Some((Piece::P(Pawn { on_start: true, can_ep: false }), true));
+            squares[1][i].piece = Some((Piece::P, false));
+            squares[6][i].piece = Some((Piece::P, true));
         }
 
         squares[0][0].piece = Some((Piece::R, false));
@@ -28,28 +28,66 @@ impl Board {
         squares[7][6].piece = Some((Piece::N, true));
         squares[7][7].piece = Some((Piece::R, true));
 
-        Board { squares }
+        Board { squares, last_move: None }
     }
 
-    pub fn generate_valid_moves(&self, color: bool) -> Vec<((usize, usize), (usize, usize))> {
+    pub fn generate_valid_moves(&mut self, color: bool) -> Vec<((usize, usize), (usize, usize))> {
         let mut valid_moves = Vec::new();
 
         for i in 0..8 {
             for j in 0..8 {
                 if let Some((piece, piece_color)) = self.squares[i][j].piece {
                     if piece_color == color {
-                        if let Piece::P(pawn) = piece {
+                        if let Piece::P = piece {
                             let direction = if color { -1 } else { 1 };
-                            let new_row = (i as isize + direction) as usize;
+                            let row1 = (i as isize + direction) as usize;
+                            let row2 = (i as isize + (direction + direction)) as usize;
 
-                            if pawn.on_start {
-                                let row1 = (i as isize + direction) as usize;
-                                let row2 = (i as isize + (direction + direction)) as usize;
+                            if row1 < 8 && self.squares[row1][j].piece.is_none() {
+                                valid_moves.push(((i, j), (row1, j)));
                             }
 
-                            if new_row < 8 && self.squares[new_row][j].piece.is_none() {
-                                valid_moves.push(((i, j), (new_row, j)));
+                            if (color && i == 1) || (!color && i == 6) {
+                                if row2 < 8 && self.squares[row1][j].piece.is_none() && self.squares[row2][j].piece.is_none() {
+                                    valid_moves.push(((i, j), (row2, j)));
+                                }
                             }
+
+                            let new_col_left = (j as isize - 1) as usize;
+                            if row1 < 8 && new_col_left < 8 && self.squares[row1][new_col_left].piece.is_some() {
+                                let (_, captured_color) = self.squares[row1][new_col_left].piece.unwrap();
+                                if captured_color != color {
+                                    valid_moves.push(((i, j), (row1, new_col_left)));
+                                }
+                            }
+                        
+                            let new_col_right = (j as isize + 1) as usize;
+                            if row1 < 8 && new_col_right < 8 && self.squares[row1][new_col_right].piece.is_some() {
+                                let (_, captured_color) = self.squares[row1][new_col_right].piece.unwrap();
+                                if captured_color != color {
+                                    valid_moves.push(((i, j), (row1, new_col_right)));
+                                }
+                            }
+
+                            if let Some(last_move) = self.last_move {
+                                if last_move.piece == Piece::P && last_move.color != color {
+                                    if last_move.position.1 == j {
+                                        if last_move.position.0 as isize + direction == row1 as isize {
+                                            if new_col_left < 8 && self.squares[row1][new_col_left].piece.is_none() {
+                                                valid_moves.push(((i, j), (row1, new_col_left)));
+                                            }
+                                            if new_col_right < 8 && self.squares[row1][new_col_right].piece.is_none() {
+                                                valid_moves.push(((i, j), (row1, new_col_right)));
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            if row1 == 0 || row1 == 7 {
+                                self.squares[row1][j].piece = Some((Piece::Q, color));
+                            }
+                        
                         }
 
                         else if piece == Piece::B {
@@ -224,21 +262,71 @@ pub fn parse_and_make_move(board: &mut Board, move_str: &str, color: bool) -> bo
 
             Piece::Q => {
                 if (row_delta != col_delta) && (row_delta != 0 && col_delta != 0) {
-                    println!("Invalid move for queens!");
+                    println!("Invalid move for queens! queens are a combination of rooks and bishops");
                     return false;
                 }
             },
 
             Piece::K => {
                 if (row_delta != col_delta) && ((row_delta != 0 && col_delta != 0) || (row_delta != 1 && col_delta != 1)) {
-                    println!("Invalid move for kings!");
+                    println!("Invalid move for kings! kings move the same as queens but only one square");
                     return false;
                 }
             },
+
+            Piece::P => {
+                let direction = if color { -1 } else { 1 };
+
+                if to.1 == from.1 {
+                    if to.0 as isize == from.0 as isize + direction {
+                        if board.squares[to.0][to.1].piece.is_none() {
+                            if to.0 == 0 || to.0 == 7 {
+                                board.squares[to.0][to.1].piece = Some((Piece::Q, color));
+                            } else {
+                                board.squares[to.0][to.1].piece = board.squares[from.0][from.1].piece.take();
+                            }
+                            return true;
+                        }
+                    }
             
-            _ => {
-                
-            }
+                    if (color && from.0 == 1) || (!color && from.0 == 6) {
+                        if to.0 as isize == from.0 as isize + (2 * direction) {
+                            let intermediate_row = (from.0 as isize + direction) as usize;
+                            if board.squares[to.0][to.1].piece.is_none() && 
+                               board.squares[intermediate_row][to.1].piece.is_none() {
+                                board.squares[to.0][to.1].piece = board.squares[from.0][from.1].piece.take();
+                                return true;
+                            }
+                        }
+                    }
+                    
+                }
+            
+                if row_delta == 1 && col_delta == 1 {
+                    if let Some((_, captured_color)) = board.squares[to.0][to.1].piece {
+                        if captured_color != color {
+                            board.squares[to.0][to.1].piece = board.squares[from.0][from.1].piece.take();
+                            return true;
+                        }
+                    }
+                }
+            
+                if col_delta == 1 && row_delta == 1 {
+                    if let Some(last_move) = &board.last_move {
+                        if last_move.piece == Piece::P && last_move.color != color {
+                            if (to.0 as isize) == (last_move.position.0 as isize + direction) && 
+                               to.1 == last_move.position.1 {
+                                board.squares[last_move.position.0][last_move.position.1].piece = None; // Capture
+                                board.squares[to.0][to.1].piece = board.squares[from.0][from.1].piece.take();
+                                return true;
+                            }
+                        }
+                    }
+                }
+            
+                println!("Invalid movement for Pawn!");
+                return false;
+            },
         }
 
         board.squares[to.0][to.1].piece = board.squares[from.0][from.1].piece.take();
