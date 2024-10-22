@@ -1,9 +1,11 @@
 mod board;
 mod bot;
+mod utils;
 
-use board::board::{Board, display_board, get_user_input};
+use board::board::Board;
 use board::placement::parse_and_make_move;
 use bot::easy::choose_bot_move;
+use utils::board::{display_board, get_user_input};
 
 fn main() {
     let mut board = Board::new();

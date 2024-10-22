@@ -1,5 +1,6 @@
 use crate::Board;
-use crate::board::board::{Piece, Square, parse_position};
+use crate::board::board::{Piece, Square};
+use crate::utils::board::{choose_promotion_piece, parse_position};
 
 impl Board {
     pub fn new() -> Self {
@@ -85,7 +86,13 @@ impl Board {
                             }
 
                             if row1 == 0 || row1 == 7 {
-                                self.squares[row1][j].piece = Some((Piece::Q, color));
+                                let promotion_piece = choose_promotion_piece();
+
+                                if promotion_piece.is_ok() {
+                                    self.squares[row1][j].piece = Some((promotion_piece.unwrap(), color));
+                                } else {
+                                    println!("Error while promoting: {}", promotion_piece.unwrap_err());
+                                }
                             }
                         
                         }
@@ -285,6 +292,15 @@ pub fn parse_and_make_move(board: &mut Board, move_str: &str, color: bool) -> bo
                             } else {
                                 board.squares[to.0][to.1].piece = board.squares[from.0][from.1].piece.take();
                             }
+                            if to.0 == 0 || to.0 == 7 {
+                                let promotion_piece = choose_promotion_piece();
+
+                                if promotion_piece.is_ok() {
+                                    board.squares[to.0][to.1].piece = Some((promotion_piece.unwrap(), color));
+                                } else {
+                                    println!("Error while promoting: {}", promotion_piece.unwrap_err());
+                                }
+                            }
                             return true;
                         }
                     }
@@ -306,6 +322,15 @@ pub fn parse_and_make_move(board: &mut Board, move_str: &str, color: bool) -> bo
                     if let Some((_, captured_color)) = board.squares[to.0][to.1].piece {
                         if captured_color != color {
                             board.squares[to.0][to.1].piece = board.squares[from.0][from.1].piece.take();
+                            if to.0 == 0 || to.0 == 7 {
+                                let promotion_piece = choose_promotion_piece();
+
+                                if promotion_piece.is_ok() {
+                                    board.squares[to.0][to.1].piece = Some((promotion_piece.unwrap(), color));
+                                } else {
+                                    println!("Error while promoting: {}", promotion_piece.unwrap_err());
+                                }
+                            }
                             return true;
                         }
                     }
@@ -316,7 +341,7 @@ pub fn parse_and_make_move(board: &mut Board, move_str: &str, color: bool) -> bo
                         if last_move.piece == Piece::P && last_move.color != color {
                             if (to.0 as isize) == (last_move.position.0 as isize + direction) && 
                                to.1 == last_move.position.1 {
-                                board.squares[last_move.position.0][last_move.position.1].piece = None; // Capture
+                                board.squares[last_move.position.0][last_move.position.1].piece = None;
                                 board.squares[to.0][to.1].piece = board.squares[from.0][from.1].piece.take();
                                 return true;
                             }
