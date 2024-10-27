@@ -49,19 +49,14 @@ pub fn choose_promotion_piece() -> Result<Piece, String> {
     stdout().flush().unwrap();
     stdin()
         .read_line(&mut input)
-        .expect("Failed to read line");
+        .expect("Failed to read line"); // TODO: add error handling
     input = input.trim().to_string();
 
-    if input == "1" {
-        return Ok(Piece::R)
-    } else if input == "2" {
-        return Ok(Piece::B)
-    } else if input == "3" {
-        return Ok(Piece::N)
-    } else if input == "4" {
-        return Ok(Piece::Q)
-    } else {
-        return Err("Invalid input to choose promotion piece".to_string())
+    match input.to_string().as_str() {
+        "1" => Ok(Piece::R),
+        "2" => Ok(Piece::B),
+        "3" => Ok(Piece::N),
+        "4" => Ok(Piece::Q),
+        _ => Err("Invalid input to choose promotion piece".to_string()),
     }
-
 }

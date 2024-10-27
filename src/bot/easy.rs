@@ -2,9 +2,10 @@ use rand::thread_rng;
 use rand::seq::SliceRandom;
 
 use crate::Board;
+use crate::board::move_generation::generate_valid_moves;
 
 pub fn choose_bot_move(board: &mut Board) -> String {
-    let valid_moves = board.generate_valid_moves(false);
+    let valid_moves = generate_valid_moves(board, false);
     if valid_moves.is_empty() {
         return String::from("No valid moves available.");
     }
