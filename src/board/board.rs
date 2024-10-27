@@ -24,6 +24,8 @@ pub struct LastMove {
 pub struct Board {
     pub squares: [[Square; 8]; 8],
     pub last_move: Option<LastMove>,
+    pub w_king_pos: (usize, usize),
+    pub b_king_pos: (usize, usize),
     pub w_in_check: bool,
     pub b_in_check: bool,
 }

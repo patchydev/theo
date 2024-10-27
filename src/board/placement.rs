@@ -1,5 +1,5 @@
 use crate::Board;
-use crate::board::board::{Piece, Square};
+use crate::board::{board::{Piece, Square}, move_generation::gen_all_moves_for_color};
 use crate::utils::board::{choose_promotion_piece, parse_position};
 
 impl Board {
@@ -8,6 +8,9 @@ impl Board {
 
         let mut b_in_check = false;
         let mut w_in_check = false;
+
+        let mut w_king_pos = (0, 4);
+        let mut b_king_pos = (7, 4);
 
         for i in 0..8 {
             squares[1][i].piece = Some((Piece::P, false));
@@ -32,7 +35,21 @@ impl Board {
         squares[7][6].piece = Some((Piece::N, true));
         squares[7][7].piece = Some((Piece::R, true));
 
-        Board { squares, last_move: None, w_in_check, b_in_check }
+        Board { squares, last_move: None, w_king_pos, b_king_pos, w_in_check, b_in_check }
+    }
+
+    fn update_check_status(&mut self, color: bool) {
+        let king_position = if !color { self.w_king_pos } else { self.b_king_pos };
+        
+        let opponent_moves = gen_all_moves_for_color(self, !color);
+
+        let in_check = opponent_moves.iter().any(|&(_, destination)| destination == king_position);
+
+        if !color {
+            self.w_in_check = in_check;
+        } else {
+            self.b_in_check = in_check;
+        }
     }
 }
 
@@ -106,6 +123,7 @@ pub fn parse_and_make_move(board: &mut Board, move_str: &str, color: bool) -> bo
                             } else { // if not, just move the pawn
                                 board.squares[to.0][to.1].piece = board.squares[from.0][from.1].piece.take();
                             }
+                            board.update_check_status(color);
                             return true;
                         }
                     }
@@ -116,6 +134,7 @@ pub fn parse_and_make_move(board: &mut Board, move_str: &str, color: bool) -> bo
                             if board.squares[to.0][to.1].piece.is_none() && 
                                board.squares[intermediate_row][to.1].piece.is_none() {
                                 board.squares[to.0][to.1].piece = board.squares[from.0][from.1].piece.take();
+                                board.update_check_status(color);
                                 return true;
                             }
                         }
@@ -136,6 +155,7 @@ pub fn parse_and_make_move(board: &mut Board, move_str: &str, color: bool) -> bo
                                     println!("Error while promoting: {}", promotion_piece.unwrap_err());
                                 }
                             }
+                            board.update_check_status(color);
                             return true;
                         }
                     }
@@ -148,6 +168,7 @@ pub fn parse_and_make_move(board: &mut Board, move_str: &str, color: bool) -> bo
                                to.1 == last_move.position.1 {
                                 board.squares[last_move.position.0][last_move.position.1].piece = None;
                                 board.squares[to.0][to.1].piece = board.squares[from.0][from.1].piece.take();
+                                board.update_check_status(color);
                                 return true;
                             }
                         }
@@ -160,6 +181,7 @@ pub fn parse_and_make_move(board: &mut Board, move_str: &str, color: bool) -> bo
         }
 
         board.squares[to.0][to.1].piece = board.squares[from.0][from.1].piece.take(); // move any piece that is not a pawn
+        board.update_check_status(color);
         return true;
     }
 

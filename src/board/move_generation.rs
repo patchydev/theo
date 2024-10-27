@@ -172,3 +172,35 @@ fn add_moves_in_direction( // function to add moves in a given direction
         }
     }
 }
+
+pub fn gen_all_moves_for_color(board: &mut Board, color: bool) -> Vec<((usize, usize), (usize, usize))> {
+    let mut moves = Vec::new();
+
+    for row in 0..8 {
+        for col in 0..8 {
+            if let Some((piece, piece_color)) = board.squares[row][col].piece {
+                if piece_color == color {
+                    match piece {
+                        Piece::P => {
+                            moves.extend(generate_pawn_moves(board, (row, col), color));
+                        },
+                        Piece::N => {
+                            moves.extend(generate_knight_moves(board, (row, col), color));
+                        },
+                        Piece::B => {
+                            moves.extend(generate_bishop_moves(board, (row, col), color));
+                        },
+                        Piece::R => {
+                            moves.extend(generate_rook_moves(board, (row, col), color));
+                        },
+                        Piece::Q | Piece::K => {
+                            moves.extend(generate_queen_or_king_moves(board, (row, col), color));
+                        },
+                    }
+                }
+            }
+        }
+    }
+
+    moves
+}
