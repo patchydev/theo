@@ -2,6 +2,8 @@ mod board;
 mod bot;
 mod utils;
 
+use colored::Colorize;
+
 use board::board::Board;
 use board::placement::parse_and_make_move;
 use bot::easy::choose_bot_move;
@@ -15,11 +17,12 @@ fn main() {
 
         let user_move = get_user_input();
         if parse_and_make_move(&mut board, &user_move, true) {
-            display_board(&board);
-            let bot_move = choose_bot_move(&mut board);
-            parse_and_make_move(&mut board, &bot_move, false);
+            let mut bot_move = choose_bot_move(&mut board);
+             while !parse_and_make_move(&mut board, &bot_move, false) {
+                bot_move = choose_bot_move(&mut board);
+             }
         } else {
-            println!("Invalid move! Please try again.");
+            println!("{}", "Invalid move! Please try again.".red().bold());
         }
     }
 }

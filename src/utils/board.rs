@@ -1,4 +1,5 @@
 use std::io::{stdout, stdin, Write};
+use colored::Colorize;
 
 use crate::{board::board::Piece, Board};
 
@@ -39,11 +40,11 @@ pub fn get_user_input() -> String {
 
 pub fn choose_promotion_piece() -> Result<Piece, String> {
     let mut input = String::new();
-    println!("You're about to promote a pawn!\n
+    println!("{}", "You're about to promote a pawn!\n
         1. R\n
         2. B\n
         3. N\n
-        4. Q");
+        4. Q".green().bold());
 
     print!("Please enter your choice: ");
     stdout().flush().unwrap();

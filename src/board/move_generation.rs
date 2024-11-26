@@ -1,3 +1,5 @@
+use colored::Colorize;
+
 use crate::Board;
 use crate::board::board::Piece;
 use crate::utils::board::choose_promotion_piece;
@@ -83,7 +85,7 @@ fn generate_pawn_moves(board: &mut Board, from: (usize, usize), color: bool) -> 
         if promotion_piece.is_ok() {
             board.squares[row1][from.1].piece = Some((promotion_piece.unwrap(), color));
         } else {
-            println!("Error while promoting: {}", promotion_piece.unwrap_err());
+            println!("{} {}","Error while promoting:".red().bold(), promotion_piece.unwrap_err());
         }
     }
 

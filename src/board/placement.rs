@@ -1,3 +1,5 @@
+use colored::Colorize;
+
 use crate::Board;
 use crate::board::{board::{Piece, Square}, move_generation::gen_all_moves_for_color};
 use crate::utils::board::{choose_promotion_piece, parse_position};
@@ -73,35 +75,35 @@ pub fn parse_and_make_move(board: &mut Board, move_str: &str, color: bool) -> bo
         match piece {
             Piece::B => {
                 if row_delta != col_delta { // rows and cols must be equal to move diagonally
-                    println!("Invalid move for Bishop! Bishops must move diagonally.");
+                    println!("{}", "Invalid move for Bishop! Bishops must move diagonally.".red().bold());
                     return false;
                 }
             },
 
             Piece::R => {
                 if row_delta != 0 && col_delta != 0 { // I don't know why it's && and not || but it works
-                    println!("Invalid move for Rook! Rooks must move either horizontally or vertically.");
+                    println!("{}", "Invalid move for Rook! Rooks must move either horizontally or vertically.".red().bold());
                     return false;
                 }
             },
 
             Piece::N => {
                 if !((row_delta == 2 && col_delta == 1) || (row_delta == 1 && col_delta == 2)) { // L shape
-                    println!("Invalid move for Knight! Knights must move in an L shape.");
+                    println!("{}", "Invalid move for Knight! Knights must move in an L shape.".red().bold());
                     return false;
                 }
             },
 
             Piece::Q => {
                 if (row_delta != col_delta) && (row_delta != 0 && col_delta != 0) { // combination of rooks and bishops
-                    println!("Invalid move for queens! queens are a combination of rooks and bishops");
+                    println!("{}", "Invalid move for queens! queens are a combination of rooks and bishops".red().bold());
                     return false;
                 }
             },
 
             Piece::K => {
-                if (row_delta != col_delta) && ((row_delta != 0 && col_delta != 0) || (row_delta != 1 && col_delta != 1)) { // same as queens but limited to one square
-                    println!("Invalid move for kings! kings move the same as queens but only one square");
+                if row_delta > 1 || col_delta > 1 { // limit kings to one square
+                    println!("{}", "Invalid move for kings! kings move the same as queens but only one square".red().bold());
                     return false;
                 }
             },
@@ -118,7 +120,7 @@ pub fn parse_and_make_move(board: &mut Board, move_str: &str, color: bool) -> bo
                                 if promotion_piece.is_ok() {
                                     board.squares[to.0][to.1].piece = Some((promotion_piece.unwrap(), color));
                                 } else {
-                                    println!("Error while promoting: {}", promotion_piece.unwrap_err());
+                                    println!("{} {}", "Error while promoting: ".red().bold(), promotion_piece.unwrap_err());
                                 }
                             } else { // if not, just move the pawn
                                 board.squares[to.0][to.1].piece = board.squares[from.0][from.1].piece.take();
@@ -146,13 +148,13 @@ pub fn parse_and_make_move(board: &mut Board, move_str: &str, color: bool) -> bo
                     if let Some((_, captured_color)) = board.squares[to.0][to.1].piece {
                         if captured_color != color {
                             board.squares[to.0][to.1].piece = board.squares[from.0][from.1].piece.take();
-                            if to.0 == 0 || to.0 == 7 {
+                            if to.0 == 0 || to.0 == 8 {
                                 let promotion_piece = choose_promotion_piece();
 
                                 if promotion_piece.is_ok() {
                                     board.squares[to.0][to.1].piece = Some((promotion_piece.unwrap(), color));
                                 } else {
-                                    println!("Error while promoting: {}", promotion_piece.unwrap_err());
+                                    println!("{} {}", "Error while promoting:".red().bold(), promotion_piece.unwrap_err());
                                 }
                             }
                             board.update_check_status(color);
@@ -175,7 +177,7 @@ pub fn parse_and_make_move(board: &mut Board, move_str: &str, color: bool) -> bo
                     }
                 }
             
-                println!("Invalid movement for Pawn!");
+                println!("{}", "Invalid movement for Pawn!".red().bold());
                 return false;
             },
         }
