@@ -69,6 +69,15 @@ pub fn parse_and_make_move(board: &mut Board, move_str: &str, color: bool) -> bo
             return false;
         }
 
+        fn check_if_capturing_own_piece(board: &mut Board, to: (usize, usize), piece_color: bool) -> bool {
+            if !(board.squares[to.0][to.1].piece.is_none()) {
+                if piece_color == board.squares[to.0][to.1].piece.unwrap().1 {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         let row_delta = (to.0 as isize - from.0 as isize).abs();
         let col_delta = (to.1 as isize - from.1 as isize).abs();
 
@@ -78,6 +87,8 @@ pub fn parse_and_make_move(board: &mut Board, move_str: &str, color: bool) -> bo
                     println!("{}", "Invalid move for Bishop! Bishops must move diagonally.".red().bold());
                     return false;
                 }
+
+                if check_if_capturing_own_piece(board, to, piece_color) { return false; }
             },
 
             Piece::R => {
@@ -85,6 +96,8 @@ pub fn parse_and_make_move(board: &mut Board, move_str: &str, color: bool) -> bo
                     println!("{}", "Invalid move for Rook! Rooks must move either horizontally or vertically.".red().bold());
                     return false;
                 }
+
+                if check_if_capturing_own_piece(board, to, piece_color) { return false; }
             },
 
             Piece::N => {
@@ -92,6 +105,8 @@ pub fn parse_and_make_move(board: &mut Board, move_str: &str, color: bool) -> bo
                     println!("{}", "Invalid move for Knight! Knights must move in an L shape.".red().bold());
                     return false;
                 }
+
+                if check_if_capturing_own_piece(board, to, piece_color) { return false; }
             },
 
             Piece::Q => {
@@ -99,6 +114,8 @@ pub fn parse_and_make_move(board: &mut Board, move_str: &str, color: bool) -> bo
                     println!("{}", "Invalid move for queens! queens are a combination of rooks and bishops".red().bold());
                     return false;
                 }
+
+                if check_if_capturing_own_piece(board, to, piece_color) { return false; }
             },
 
             Piece::K => {
@@ -114,13 +131,13 @@ pub fn parse_and_make_move(board: &mut Board, move_str: &str, color: bool) -> bo
                 if to.1 == from.1 { // going in a straight line
                     if to.0 as isize == from.0 as isize + direction { // going one square
                         if board.squares[to.0][to.1].piece.is_none() {
-                            if to.0 == 0 || to.0 == 7 { // are we promoting?
+                            if to.0 == 0 || to.0 == 8 { // are we promoting?
                                 let promotion_piece = choose_promotion_piece();
 
                                 if promotion_piece.is_ok() {
                                     board.squares[to.0][to.1].piece = Some((promotion_piece.unwrap(), color));
                                 } else {
-                                    println!("{} {}", "Error while promoting: ".red().bold(), promotion_piece.unwrap_err());
+                                    println!("{} {}", "Error while promoting:".red().bold(), promotion_piece.unwrap_err());
                                 }
                             } else { // if not, just move the pawn
                                 board.squares[to.0][to.1].piece = board.squares[from.0][from.1].piece.take();
