@@ -123,6 +123,7 @@ pub fn parse_and_make_move(board: &mut Board, move_str: &str, color: bool) -> bo
                     println!("{}", "Invalid move for kings! kings move the same as queens but only one square".red().bold());
                     return false;
                 }
+                    if check_if_capturing_own_piece(board, to, piece_color) { return false; }
             },
 
             Piece::P => {
