@@ -132,7 +132,7 @@ pub fn parse_and_make_move(board: &mut Board, move_str: &str, color: bool) -> bo
                 if to.1 == from.1 { // going in a straight line
                     if to.0 as isize == from.0 as isize + direction { // going one square
                         if board.squares[to.0][to.1].piece.is_none() {
-                            if to.0 == 0 || to.0 == 8 { // are we promoting?
+                            if (color && to.0 == 0) || (!color && to.0 == 7) { // are we promoting?
                                 let promotion_piece = choose_promotion_piece();
 
                                 if promotion_piece.is_ok() {
@@ -166,7 +166,7 @@ pub fn parse_and_make_move(board: &mut Board, move_str: &str, color: bool) -> bo
                     if let Some((_, captured_color)) = board.squares[to.0][to.1].piece {
                         if captured_color != color {
                             board.squares[to.0][to.1].piece = board.squares[from.0][from.1].piece.take();
-                            if to.0 == 0 || to.0 == 8 {
+                            if (color && to.0 == 0) || (!color && to.0 == 7) {
                                 let promotion_piece = choose_promotion_piece();
 
                                 if promotion_piece.is_ok() {

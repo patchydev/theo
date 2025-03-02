@@ -79,14 +79,8 @@ fn generate_pawn_moves(board: &mut Board, from: (usize, usize), color: bool) -> 
         }
     }
 
-    if row1 == 0 || row1 == 7 {
-        let promotion_piece = choose_promotion_piece();
-
-        if promotion_piece.is_ok() {
-            board.squares[row1][from.1].piece = Some((promotion_piece.unwrap(), color));
-        } else {
-            println!("{} {}","Error while promoting:".red().bold(), promotion_piece.unwrap_err());
-        }
+    if (color && row1 == 0) || (!color && row1 == 7) {
+        valid_moves.push(((from.0, from.1), (row1, from.1)));
     }
 
     valid_moves
