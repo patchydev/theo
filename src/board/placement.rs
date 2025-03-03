@@ -53,6 +53,87 @@ impl Board {
             self.b_in_check = in_check;
         }
     }
+
+    pub fn is_checkmate(&mut self, color: bool) -> bool {
+        if (color && !self.w_in_check) || (!color && !self.b_in_check) {
+            return false;
+        }
+        
+        let all_moves = self.get_all_legal_moves(color);
+        
+        all_moves.is_empty()
+    }
+    
+    pub fn is_stalemate(&mut self, color: bool) -> bool {
+        if (color && self.w_in_check) || (!color && self.b_in_check) {
+            return false;
+        }
+        
+        let all_moves = self.get_all_legal_moves(color);
+        
+        all_moves.is_empty()
+    }
+    
+    fn get_all_legal_moves(&mut self, color: bool) -> Vec<((usize, usize), (usize, usize))> {
+        let all_possible_moves = gen_all_moves_for_color(self, color);
+        let mut legal_moves = Vec::new();
+        
+        for &(from, to) in &all_possible_moves {
+            let captured_piece = self.squares[to.0][to.1].piece;
+            let original_piece = self.squares[from.0][from.1].piece;
+            let original_w_check = self.w_in_check;
+            let original_b_check = self.b_in_check;
+            let original_w_king_pos = self.w_king_pos;
+            let original_b_king_pos = self.b_king_pos;
+            
+            self.squares[to.0][to.1].piece = self.squares[from.0][from.1].piece;
+            self.squares[from.0][from.1].piece = None;
+            
+            if let Some((piece, piece_color)) = original_piece {
+                if piece == Piece::K {
+                    if color {
+                        self.w_king_pos = to;
+                    } else {
+                        self.b_king_pos = to;
+                    }
+                }
+            }
+            
+            self.update_check_status(color);
+            let in_check = if color { self.w_in_check } else { self.b_in_check };
+            
+            if !in_check {
+                legal_moves.push((from, to));
+            }
+            
+            self.squares[from.0][from.1].piece = original_piece;
+            self.squares[to.0][to.1].piece = captured_piece;
+            self.w_in_check = original_w_check;
+            self.b_in_check = original_b_check;
+            self.w_king_pos = original_w_king_pos;
+            self.b_king_pos = original_b_king_pos;
+        }
+        
+        legal_moves
+    }
+
+    pub fn check_game_status(&mut self, color: bool) -> Option<String> {
+        // Update check status for the opposite color (the player who just moved)
+        self.update_check_status(color);
+        
+        let opponent_color = !color;
+        
+        if self.is_checkmate(opponent_color) {
+            return Some(format!("Checkmate! {} wins!", if color { "White" } else { "Black" }));
+        } else if self.is_stalemate(opponent_color) {
+            return Some("Stalemate! The game is a draw.".to_string());
+        } else if (opponent_color && self.w_in_check) || (!opponent_color && self.b_in_check) {
+            let check_message = format!("{} is in check!", if opponent_color { "White" } else { "Black" });
+            return Some(check_message);
+        }
+        
+        None
+    }
 }
 
 pub fn parse_and_make_move(board: &mut Board, move_str: &str, color: bool) -> bool {
